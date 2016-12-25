@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 __author__ = 'Thejojo'
@@ -23,8 +23,8 @@ def create_pool(loop,**kw):
         # 连接的基本属性设置
         host=kw.get('host', 'localhost'), # 数据库服务器位置，本地
         port=kw.get('port', 3307), # MySQL端口号
-        user=kw['root'], # 登录用户名
-        password=kw['aaaa'], # 登录密码
+        user=kw['user'], # 登录用户名
+        password=kw['password'], # 登录密码
         db=kw['db'], # 数据库名
         charset=kw.get('charset','utf8'), # 设置连接使用的编码格式utf-8
         autocommit=kw.get('autocommit',True),  # 是否自动提交，默认false
@@ -82,7 +82,18 @@ def execute(sql, args, autocommit=True):
             if not autocommit:
                 yield from conn.rollback()
             raise
+        # finally:
+        #     conn.close()
+
         return affected
+# 解决eventloop is closed 因为orm.py中只是打开了连接池却没有关闭的原因。所以，在create_pool后应该有相应的close_pool代码
+@asyncio.coroutine
+def destory_pool():  # 销毁连接池
+    global __pool
+    if __pool is not None:
+        __pool.close()
+        yield from  __pool.wait_closed()
+
 
 # 该方法用来将其占位符拼接起来成'?,?,?'的形式，num表示为参数的个数
 # 根据输入的参数生成占位符列表
@@ -287,7 +298,18 @@ class Model(dict, metaclass=ModelMetaclass):
         rs = yield from select(' '.join(sql), args)  # 转list为str.
         return [cls(**r) for r in rs]  # cls(**r)调用本类的__init__(方法)
 
-
+    # 根据列名和条件查看数据库有多少条信息
+    @classmethod
+    @asyncio.coroutine
+    def countRows(cls, selectField='*', where=None, args=None):
+        ' find number by select and where. '
+        sql = ['select count(%s) _num_ from `%s`' % (selectField, cls.__table__)]
+        if where:
+            sql.append('where %s' % where)
+        resultset = yield from select(' '.join(sql), args, 1)  # size = 1
+        if not resultset:
+            return 0
+        return resultset[0].get('_num_', 0)
 
     # 查找某列
     @classmethod
@@ -345,4 +367,3 @@ class Model(dict, metaclass=ModelMetaclass):
         print('删除成功！')
         if rows != 1:
             logging.warn('failed to remove by primary key: affected rows: %s' % rows)
-
