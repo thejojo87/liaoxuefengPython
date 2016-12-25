@@ -2,10 +2,10 @@
 
 [TOC]
 
-# Day1 准备工作
+# Day 1 - 准备工作
 git，mysql，pip安装第三方
 
-# Day2 编写web框架
+# Day 2 - 编写web框架
 
 
 # Day 3 - 编写ORM
@@ -63,3 +63,32 @@ def execute(sql, args):
         return affected
 ```
 
+还是不行，所以加上了destory方法。在test最后写上。
+
+# Day 5 - 编写Web框架
+
+首先是coroweb文件
+首先定义get和post
+函数经过该函数后，即加入__method__、__route__属性
+例如，处理带参数的URL/blog/{id}可以这么写：
+
+@get('/blog/{id}')
+def get_blog(id):
+    pass
+
+类似还有一个post。
+
+第二个部分是好几个函数，判断函数值关键字
+
+第三个是RequestHandler
+URL处理函数不一定是一个coroutine，因此我们用RequestHandler()来封装一个URL处理函数。
+
+RequestHandler是一个类，由于定义了__call__()方法，因此可以将其实例视为函数。
+
+RequestHandler目的就是从URL函数中分析其需要接收的参数，从request中获取必要的参数，
+调用URL函数，然后把结果转换为web.Response对象，这样，
+就完全符合aiohttp框架的要求：
+
+第四个是addroute模块
+
+然后是app.py文件
