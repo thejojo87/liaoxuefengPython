@@ -92,3 +92,14 @@ RequestHandler目的就是从URL函数中分析其需要接收的参数，从req
 第四个是addroute模块
 
 然后是app.py文件
+
+# Day 6 - 编写配置文件
+
+config_default 和config_override，config 这3个文件
+
+default用来保存默认设置。override用来覆盖数据库host等等。
+优先从override来读取。配置读取文件放在统一的config里
+
+前两个很简单。最后一个复杂一点。
+
+
