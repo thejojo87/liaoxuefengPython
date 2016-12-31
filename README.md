@@ -168,5 +168,13 @@ base写完之后，写blogs界面
 
 先改写index函数，然后教程里没写出来，但是要从models里import Blogs等等。
 
+# Day 9 - 编写API
+RestAPI了
 
+就是一个get 在handle里。
+但是原文里写的乱七八糟。
+看代码就很简单了。
+apierror跳过去了先。
+
+下一章节继续。
 
