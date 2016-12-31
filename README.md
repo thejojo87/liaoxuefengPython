@@ -102,4 +102,71 @@ default用来保存默认设置。override用来覆盖数据库host等等。
 
 前两个很简单。最后一个复杂一点。
 
+这个toDict的主要功能是添加一种取值方式a_dict.key，相当于a_dict['key']
+
+# Day 7 - 编写MVC
+
+调试成功。不知道为什么原来的app.py文件有错误。无法连接mysql。
+修改之后就好了。
+
+# Day 8 - 构建前端
+
+uikit 这个css框架，打包放倒static文件夹里
+
+jinja2模板
+
+```
+“继承”模板的方式是通过编写一个“父模板”，在父模板中定义一些可替换的block（块）。然后，编写多个“子模板”，每个子模板都可以只替换父模板定义的block。比如，定义一个最简单的父模板：
+
+<!-- base.html -->
+<html>
+    <head>
+        <title>{% block title%} 这里定义了一个名为title的block {% endblock %}</title>
+    </head>
+    <body>
+        {% block content %} 这里定义了一个名为content的block {% endblock %}
+    </body>
+</html>
+
+对于子模板a.html，只需要把父模板的title和content替换掉：
+
+{% extends 'base.html' %}
+
+{% block title %} A {% endblock %}
+
+{% block content %}
+    <h1>Chapter A</h1>
+    <p>blablabla...</p>
+{% endblock %}
+
+```
+
+开始写base界面了。但是新的uikit已经改变了很多。有些功能无法实现。
+如果想一模一样，还是把廖雪峰的sattic文件给复制下来。
+html界面一共有head 和body部分。
+head界定了三个块。meta title beforehead
+
+用于子页面定义一些meta，例如rss feed：
+```
+  {% block meta %} ... {% endblock %}
+
+覆盖页面的标题：
+
+  {% block title %} ... {% endblock %}
+
+子页面可以在<head>标签关闭前插入JavaScript代码：
+
+  {% block beforehead %} ... {% endblock %}
+```
+
+body 部分：
+第一个部分是导航条，第二个部分是内容。第三个部分是最底下的声明之类的。
+
+base写完之后，写blogs界面
+
+然后处理url的函数更新一下。在handlers里
+
+先改写index函数，然后教程里没写出来，但是要从models里import Blogs等等。
+
+
 
