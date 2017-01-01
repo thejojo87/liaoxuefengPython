@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import logging; logging.basicConfig(level=logging.INFO)
 
+
+import logging
+
+# 设置日志等级,默认为WARNING.只有指定级别或更高级的才会被追踪记录
+logging.basicConfig(level=logging.INFO) # 输出到logfile文件
 import asyncio, os, json, time
 from datetime import datetime
 
@@ -10,7 +14,7 @@ from aiohttp import web
 from jinja2 import Environment,FileSystemLoader
 import orm
 from coroweb import add_routes, add_static
-
+from handlers import cookie2user, COOKIE_NAME
 
 # # 和flask很像 路由
 # def index(request):
@@ -75,6 +79,28 @@ def logger_factory(app, handler):
         # 日志记录完毕之后, 调用传入的handler继续处理请求
         return (yield from handler(request))
     return logger
+
+# 在处理请求之前,先将cookie解析出来,并将登录用于绑定到request对象上
+# 这样后续的url处理函数就可以直接拿到登录用户
+# 以后的每个请求,都是在这个middle之后处理的,都已经绑定了用户信息
+@asyncio.coroutine
+def auth_factory(app, handler):
+    @asyncio.coroutine
+    def auth(request):
+        logging.info("check user: %s %s" % (request.method, request.path))
+        request.__user__ = None # 先绑定一个None到请求的__user__属性
+        cookie_str = request.cookies.get(COOKIE_NAME) # 通过cookie名取得加密cookie字符串(不明白的看看handlers.py)
+        if cookie_str:
+            user = yield from cookie2user(cookie_str) # 验证cookie,并得到用户信息
+            if user:
+                logging.info("set current user: %s" % user.email)
+                request.__user__ = user # 将用户信息绑定到请求上
+            # 请求的路径是管理页面,但用户非管理员,将会重定向到登录页面?
+            if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
+                return web.HTTPFound('/signin')
+            return (yield from handler(request))
+        return auth
+
 
 # 解析数据
 @asyncio.coroutine

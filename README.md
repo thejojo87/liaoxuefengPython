@@ -176,5 +176,38 @@ RestAPI了
 看代码就很简单了。
 apierror跳过去了先。
 
-下一章节继续。
+下一章节继续
+
+# Day 10 - 用户注册和登录
+首先要完成的是用户注册，这个比较简单。
+
+需要的是一个api，指向注册页面。还有template
+
+template我发现他用了vue这个框架。
+要学会用这个前端先？
+
+在static里的js文件夹下面添加了一些jquery和vue等js。
+然后修改basetemplat引用，增加了vue。
+写了registe界面。register界面使用了submit给/api/users里
+
+下一步是postregister信息
+在post api/users里处理函数
+
+下半部分是用户登录界面。
+这里比较复杂，因为涉及到cookie，加密问题。
+
+先写一个signin界面
+
+然后在handle处理问题。
+
+这里留下了一个问题，就是登陆成功后在上面并没有显示状态，下面评论有答案，
+不过等14天完成吧。
+
+
+
+
+
+
+
+
 
