@@ -96,10 +96,10 @@ def auth_factory(app, handler):
                 logging.info("set current user: %s" % user.email)
                 request.__user__ = user # 将用户信息绑定到请求上
             # 请求的路径是管理页面,但用户非管理员,将会重定向到登录页面?
-            if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
-                return web.HTTPFound('/signin')
-            return (yield from handler(request))
-        return auth
+        if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
+            return web.HTTPFound('/signin')
+        return (yield from handler(request))
+    return auth
 
 
 # 解析数据
@@ -205,7 +205,7 @@ def init(loop):
     # 创建全局数据库连接池
     yield from orm.create_pool(loop = loop, host="127.0.0.1", port = 3307, user = "www-data", password = "www-data", db = "awesome")
     # 创建web应用,
-    app = web.Application(loop = loop, middlewares=[logger_factory, response_factory]) # 创建一个循环类型是消息循环的web应用对象
+    app = web.Application(loop = loop, middlewares=[logger_factory, auth_factory, response_factory]) # 创建一个循环类型是消息循环的web应用对象
     # 设置模板为jiaja2, 并以时间为过滤器
     init_jinja2(app, filters=dict(datetime=datetime_filter))
     # 注册所有url处理函数

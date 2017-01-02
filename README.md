@@ -203,6 +203,23 @@ template我发现他用了vue这个框架。
 这里留下了一个问题，就是登陆成功后在上面并没有显示状态，下面评论有答案，
 不过等14天完成吧。
 
+# Day 11 - 编写日志创建页
+
+写后端代码，第一部就是post 的函数。Rest API
+比如新建日志。
+
+@post('/api/blogs')
+
+比较男的事情是编写前段页面，因为前端混合html，css和javascript。
+而且前端页面是动态页面，由后端代码生成的。
+
+模板方式会让后端和javascript很紧密，所以需要mvvm模式
+
+再这里，app.py文件里，必定是哪里错了，才导致request没有user属性。
+就是app里初始化init的第二行，middlewares里，少了auth_factory。
+
+
+
 
 
 
