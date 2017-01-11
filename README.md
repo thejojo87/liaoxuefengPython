@@ -210,13 +210,29 @@ template我发现他用了vue这个框架。
 
 @post('/api/blogs')
 
-比较男的事情是编写前段页面，因为前端混合html，css和javascript。
+比较难的事情是编写前段页面，因为前端混合html，css和javascript。
 而且前端页面是动态页面，由后端代码生成的。
 
 模板方式会让后端和javascript很紧密，所以需要mvvm模式
 
 再这里，app.py文件里，必定是哪里错了，才导致request没有user属性。
 就是app里初始化init的第二行，middlewares里，少了auth_factory。
+
+# Day 12 - 编写日志列表页
+
+现在apis文件里定义一个page类，储存分页信息。
+就只有init函数和str函数。
+item_count是博客总数
+page_index是页码，page_size是一个页面显示最多博客的数目。
+还有两个boor函数。has_next has_previous
+
+然后是handlers.py
+添加get api/blogs 这个是动作，并不是直接访问的，需要和template配合
+
+
+添加 get /manage/blogs页面,template写一个
+写完，可以看到总页面了。
+但是比如删除，比如进入blog页面都是没有的。要自己写。
 
 
 
