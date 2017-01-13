@@ -234,8 +234,66 @@ page_index是页码，page_size是一个页面显示最多博客的数目。
 写完，可以看到总页面了。
 但是比如删除，比如进入blog页面都是没有的。要自己写。
 
+# Day 13 - 提升开发效率
+主要是这个框架，修改了代码，并不会反映到网站里，必须得重启。
+很麻烦。
+要添加这个功能。在这里。
+Django自动有这个模式。
+一种思路是检测www目录下的代码改动，一旦有改动，就自动重启服务器。
+
+按照这个思路，我们可以编写一个辅助程序pymonitor.py，
+让它启动wsgiapp.py，并时刻监控www目录下的代码改动，有改动时，
+先把当前wsgiapp.py进程杀掉，再重启，就完成了服务器进程的自动重启。
+
+要监控目录文件的变化，我们也无需自己手动定时扫描，
+Python的第三方库watchdog可以利用操作系统的API来监控目录文件的变化，并发送通知。
+
+wsgiapp文件是2.7的版本教程里的启动文件。
+3的教程里没必要。
+
+先新建一个pymonitor.py
+
+有点不明白，
+
+C:\Users\chn_t\AppData\Local\Programs\Python\Python35\python.exe C:/Users/chn_t/Desktop/coding/python-liaoxuefeng/liaoxuefengPython/www/pymonitor.py -m www.app
+
+遇到一个问题，在app.py里 no module named orm
+其实就是orm环境变量没有加在sys里。
+
+解决办法是添加这两行：
+http://www.itdadao.com/articles/c15a211947p0.html
+
+```python
+# current_working_directory = "C:\Users\username\PycharmProjects\projectName"
+# sys.path.append(current_working_directory)
+
+```
+不过windows里，\这个符号需要是\\才可以。
+http://stackoverflow.com/questions/18084554/why-do-i-get-a-syntaxerror-for-a-unicode-escape-in-my-file-path
+
+最后再遇到这个问题：
+
+```python
+
+OSError: [Errno 10048] error while attempting to bind on address ('127.0.0.1', 9000): 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。
+Exception ignored in: <bound method Connection.__del of <aiomysql.connection.Connection object at 0x000000000390C4E0>>
+Traceback (most recent call last):
+  File "C:\Python34\lib\site-packages\aiomysql\connection.py", line 694, in __del File "C:\Python34\lib\site-packages\aiomysql\connection.py", line 260, in close File "C:\Python34\lib\asyncio\selector_events.py", line 568, in close File "C:\Python34\lib\asyncio\base_events.py", line 427, in call_soon File "C:\Python34\lib\asyncio\base_events.py", line 436, in _call_soon File "C:\Python34\lib\asyncio\base_events.py", line 265, in _check_closed RuntimeError: Event loop is closed
+```
+
+这个问题是因为我一个ip开了好几个服务。
+需要把app关掉就可以了。
 
 
+
+
+使用gunicorn可以一步搞定。
+看aiohttp的官方文档支持gunicorn。
+
+pip3 install gunicorn
+gunicorn -b 127.0.0.1:8800 -k aiohttp.worker.GunicornWebWorker -w 1 -t 60 --reload app:app
+
+注意加上 --reload
 
 
 

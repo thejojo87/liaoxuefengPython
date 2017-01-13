@@ -12,6 +12,11 @@ from datetime import datetime
 
 from aiohttp import web
 from jinja2 import Environment,FileSystemLoader
+
+import sys
+current_working_directory = "C:\\Users\\chn_t\Desktop\\coding\\python-liaoxuefeng\\liaoxuefengPython\\www"
+sys.path.append(current_working_directory)
+
 import orm
 from coroweb import add_routes, add_static
 from handlers import cookie2user, COOKIE_NAME
