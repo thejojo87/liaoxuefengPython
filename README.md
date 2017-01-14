@@ -228,11 +228,17 @@ page_index是页码，page_size是一个页面显示最多博客的数目。
 
 然后是handlers.py
 添加get api/blogs 这个是动作，并不是直接访问的，需要和template配合
+首先在template里，使用javascript，使用api/blogs获取blog数组。
 
 
-添加 get /manage/blogs页面,template写一个
+
+
+添加 get /manage/blogs页面,template写一个-导入api/blogs页面里。
 写完，可以看到总页面了。
 但是比如删除，比如进入blog页面都是没有的。要自己写。
+
+所以一共需要3个部分。
+一个api/blogs  一个manage/blogs 最后一个是模板 template
 
 # Day 13 - 提升开发效率
 主要是这个框架，修改了代码，并不会反映到网站里，必须得重启。
@@ -256,6 +262,7 @@ wsgiapp文件是2.7的版本教程里的启动文件。
 有点不明白，
 
 C:\Users\chn_t\AppData\Local\Programs\Python\Python35\python.exe C:/Users/chn_t/Desktop/coding/python-liaoxuefeng/liaoxuefengPython/www/pymonitor.py -m www.app
+
 
 遇到一个问题，在app.py里 no module named orm
 其实就是orm环境变量没有加在sys里。
@@ -295,10 +302,211 @@ gunicorn -b 127.0.0.1:8800 -k aiohttp.worker.GunicornWebWorker -w 1 -t 60 --relo
 
 注意加上 --reload
 
+# Day 14 - 完成Web App
+
+剩下的都是体力活
 
 
+后端API包括：
+
+    获取日志：GET /api/blogs
+
+    创建日志：POST /api/blogs
+
+    修改日志：POST /api/blogs/:blog_id
+
+    删除日志：POST /api/blogs/:blog_id/delete
+
+    获取评论：GET /api/comments
+
+    创建评论：POST /api/blogs/:blog_id/comments
+
+    删除评论：POST /api/comments/:comment_id/delete
+
+    创建新用户：POST /api/users
+
+    获取用户：GET /api/users
+
+管理页面包括：
+
+    评论列表页：GET /manage/comments
+
+    日志列表页：GET /manage/blogs
+
+    创建日志页：GET /manage/blogs/create
+
+    修改日志页：GET /manage/blogs/edit
+
+    用户列表页：GET /manage/users
+
+用户浏览页面包括：
+
+    注册页：GET /register
+
+    登录页：GET /signin
+
+    注销页：GET /signout
+
+    首页：GET /
+
+    日志详情页：GET /blog/:blog_id
+
+把所有的功能实现，我们第一个Web App就宣告完成！
+
+### 用户浏览页面里
+，注册页面，登陆页面，注销页面有了。
+第一个要做的是首页改成文章列表
+
+@get('/')修改主页
+这里需要注意一下。用户名的问题。
+原来是在模板里，用request属性返回的。
+但是在这里，改成了app.py里 response_factory里加了一句。
+
+```python
+r['__user__'] = request.__user__
+```
+
+当然base template也需要改掉。
+
+这里不明白
+1. 貌似page改成任何数字都无所谓？如果文章的查询num为0，才会使用page=1的默认设定
+2. page_index貌似没用到？
+3. 为什么查询是count(id)? 貌似是固定的，就按照id查询数目，如果没有就报错
+
+先从数据库查询文章数，然后传过去page模型，计算页码等数字。
+然后再查询数据库里文章，按照计算好的数字提取。
 
 
+```python
+# 对于首页的get请求的处理
+@get('/')
+def index(*, page="1"):
+    page_index = get_page_index(page)
+    num = yield from Blog.findNumber("count(id)")
+    page = Page(num)
+    if num == 0:
+        blogs = []
+    else:
+        blogs = yield from Blog.findAll(orderBy="created_at desc", limit=(page.offset,page.limit))
+    return {
+        '__template__': 'blogs.html',
+        'page': page,
+        'blogs': blogs,
+    }
+```
+
+下一个是日志详情页：GET /blog/:blog_id
+
+```python
+
+# 日志详情页面
+@get('/blog/{id}')
+def get_blog(id):
+    blog = yield from Blog.find(id)  # 通过id从数据库拉取博客信息
+    # 从数据库拉取指定blog的全部评论,按时间降序排序,即最新的排在最前
+    comments = yield from Comment.findAll('blog_id=?', [id], orderBy='created_at desc')
+    # 将每条评论都转化为html格式(根据text2html代码可知,实际为html的<p>)
+    for c in comments:
+        c.html_content = text2html(c.content)
+    blog.html_content = markdown2.markdown(blog.content)  # blog是markdown格式,将其转换为html格式
+    return {
+        # 返回的参数将在jinja2模板中被解析
+        "__template__": "blog.html",
+        "blog": blog,
+        "comments": comments
+    }
+```
+
+然后还需要新的blog模板。
+其实要是简单的从blogs页面复制过来也不是不可以。
+不过还是添加了如果是用户登录，那么就可以评论。
+有一个增加评论的功能。post的地址是哪里呢？
+貌似是最上面的script里规定的
+var comment_url = '/api/blogs/{{ blog.id }}/comments';
+
+刷新还有重定向都是用javascript解决的。
+refresh return
+
+用户浏览页面是做完了。
+下一部分是
+
+### 管理页面
+这里日志列表页，创建日志有了。
+需要新建评论列表页面，用户列表页面。
+修改日志页面，
+####  评论列表页面
+新建了一个get /manage/comments 导向一个template
+新建了一个get /api/comments 用来给模板提供数据。和blogsqpi一模一样
+新建了manage_comments.html
+
+#### 用户列表页面
+
+新建了一个get /manage/users 导向一个template
+新建了一个get /api/users 和上面评论一样。
+新建一个manage_users.html
+
+#### 修改日志页面
+GET /manage/blogs/edit
+修改是在文章列表里。
+又一个修改的图标。
+
+所以新建一个get /manage/blogs/edit
+然后是manage_blog_edit模板,模板之前就有过。
+
+### 后端app页面
+
+获取日志有了。
+
+#### 创建日志-跳转
+创建日志有了。但是创建日志之后，保存后跳转有错误。
+创建日志用的事edit的template。保存确实是post api/blogs。但是redirect
+在location.assign .出错的原因是，添加了id。
+
+#### 修改日志-跳转
+首先从manage/blogs里编辑图标链接导向edit模板。
+传递id，给 get manage/blogs/edit。
+edit模板里有 script postjson
+现在就是缺少 post blog id
+
+```python
+# 修改日志api
+# API: 修改博客
+@post("/api/blogs/{id}")
+def api_update_blog(id, request, *, name, summary, content):
+    check_admin(request) # 检查用户权限
+    # 验证博客信息的合法性
+    if not name or not name.strip():
+        raise APIValueError("name", "name cannot be empty")
+    if not summary or not summary.strip():
+        raise APIValueError("summary", "summary cannot be empty")
+    if not content or not content.strip():
+        raise APIValueError("content", "content cannot be empty")
+    blog = yield from Blog.find(id)  # 获取修改前的博客
+    blog.name = name.strip()
+    blog.summary = summary.strip()
+    blog.content = content.strip()
+    yield from blog.update() # 更新博客
+    return blog # 返回博客信息
+```
+
+#### 删除日志
+
+只添加一个post api/blogs/{id}/delete
+就可以了。
+不过我对return dict 最后一句还不是很明白。
+
+#### 创建评论
+
+文章详情里面有个add comment按钮。
+只需要加一个post，然后刷新不就好了么。
+果然如此简单。
+
+
+#### 删除评论
+原来貌似没有删除评论按钮。
+
+如果在评论管理页面直接删除，只需要一个api post就可以了。
+但是不能在文章页面有删除，还是很麻烦呢。
 
 
 
